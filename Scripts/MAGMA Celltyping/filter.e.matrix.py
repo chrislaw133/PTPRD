@@ -1,6 +1,3 @@
-#!/bin/bash
-
-python - <<EOF
 import scanpy as sc
 import pandas as pd
 
@@ -25,4 +22,3 @@ adata = adata[:, adata.var_names.isin(gene_list)]
 adata.write_h5ad(output_file)
 
 print(f'Filtered h5ad file saved with {adata.n_vars} genes.')
-EOF
