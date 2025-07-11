@@ -8,7 +8,6 @@ Annot_File="$WORKDIR/AUX/annotation_file.genes.annot"
 SNP_Pval_File="$WORKDIR/sumstats/snp_pval.txt"
 Output_Prefix="adult_midbrain"
 
-cd /deac/bio/lackGrp/lawrcm22/MAGMA/
 ./magma \
  --bfile $Data_File \
  --gene-annot $Annot_File \
