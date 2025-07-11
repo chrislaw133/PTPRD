@@ -1,6 +1,3 @@
-#!/bin/bash
-
-python -c "
 import scanpy as sc
 from scipy import io
 
@@ -20,4 +17,3 @@ print('Features file processing complete!')
         
 io.mmwrite('/path/to/output_dir/matrix', adata.X.T)
 print('.mtx file processing complete!')
-"
