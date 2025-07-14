@@ -1,29 +1,16 @@
 #!/bin/bash
 
-#SBATCH --account=lackgrp
-#SBATCH --job-name="Genomic_Structural_Equation_Modeling"
-#SBATCH --partition=small
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=8G
-#SBATCH --time=01-00:00:00
-#SBATCH --output="SLURM-Genomic_Structural_Equation_Modeling-%j.o"
-#SBATCH --error="SLURM-Genomic_Structural_Equation_Modeling-%j.e"
-#SBATCH --mail-type=BEGIN,END,FAIL
-#SBATCH --mail-user=lawrcm22@wfu.edu
-
 set -euo pipefail
 
 # where your per-chr .dat files live
-INDIR=/deac/bio/lackGrp/lawrcm22/TWAS/univ_TWAS
+INDIR=/path/to/univ_TWAS
 
 # where you want to put the combined .allchr.dat files
-COMBDIR=/deac/bio/lackGrp/lawrcm22/TWAS/univ_combined_TWAS
+COMBDIR=/path/to/univ_combined_TWAS
 mkdir -p "$COMBDIR"
 
 # list of regions (one per line, matching the prefix in your filenames)
-REGIONS=/deac/bio/lackGrp/lawrcm22/TWAS/GE_weights/regions.txt
+REGIONS=/path/to/regions.txt
 
 # for each region…
 while read -r REGION; do
