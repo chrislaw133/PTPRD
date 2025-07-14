@@ -7,7 +7,7 @@ Raw_data <- Read10X(data.dir = '/path/to/matrix')
 rownames(Raw_data) <- gsub("ensg", "ENSG", rownames(Raw_data))
 metadata = fread('/path/to/metadata.csv')
 l1 <- metadata$anatomical_division_label #Desired features for annotation level
-l2 <- metadata$desired_annotation_feature
+l2 <- metadata$brain_region
 
 annotLevels <- list(l1 = l1, l2 = l2)
 
