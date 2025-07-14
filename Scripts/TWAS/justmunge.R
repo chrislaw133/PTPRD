@@ -9,3 +9,5 @@ munge(c("/deac/bio/lackGrp/lawrcm22/TWAS/sumstats/MDD.txt",
   trait.names = c("MDD", "ADHD", "BPD"),
   info.filter = 0.9,
   maf.filter = 0.01)
+
+#Returns munged summary statistics for multivariable LDSC
