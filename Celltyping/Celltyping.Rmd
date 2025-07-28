@@ -1,0 +1,272 @@
+```{r}
+library(Seurat)
+library(data.table)
+library(MungeSumstats)
+
+Raw_data <- Read10X(data.dir = '/path/to/matrix')
+rownames(Raw_data) <- gsub("ensg", "ENSG", rownames(Raw_data))
+metadata = fread('/path/to/metadata.csv')
+l1 <- metadata$anatomical_division_label #Desired features for annotation level
+l2 <- metadata$brain_region
+
+annotLevels <- list(l1 = l1, l2 = l2)
+
+```{r}
+library(EWCE)
+exp <- Raw_data
+annotLevels = annotLevels
+groupName = "Neurons"
+no_cores = no_cores=1
+savePath = "/path/to/output_dir/"
+file_prefix = "Neurons"
+as_sparse = TRUE
+as_DelayedArray = FALSE
+normSpec = FALSE
+convert_orths = FALSE
+input_species="human"
+output_species="human"
+non121_strategy = "drop_both_species"
+method = "homologene"
+force_new_file = TRUE
+specificity_quantiles = TRUE
+numberOfBins = 40
+dendrograms = TRUE
+return_ctd = TRUE
+verbose = TRUE
+
+
+CTD <- generate_celltype_data(
+  exp,
+  annotLevels,
+  groupName,
+  no_cores,
+  savePath,
+  file_prefix,
+  as_sparse,
+  as_DelayedArray,
+  normSpec,
+  convert_orths,
+  input_species,
+  output_species,
+  non121_strategy,
+  method,
+  force_new_file,
+  specificity_quantiles,
+  numberOfBins,
+  dendrograms,
+  return_ctd,
+  verbose = verbose
+)
+```
+
+
+Munge
+```{r}
+data("sumstatsColHeaders")
+path_formatted <- format_sumstats(
+  path = '/path/to/mvgwas.txt',
+  ref_genome = "GRCh37",
+  convert_ref_genome = NULL,
+  chain_source = "ensembl",
+  convert_small_p = TRUE,
+  convert_large_p = TRUE,
+  convert_neg_p = TRUE,
+  compute_z = FALSE,
+  force_new_z = FALSE,
+  compute_n = 0L,
+  convert_n_int = TRUE,
+  impute_beta = FALSE,
+  es_is_beta = TRUE,
+  impute_se = FALSE,
+  analysis_trait = NULL,
+  INFO_filter = 0.9,
+  FRQ_filter = 0,
+  pos_se = TRUE,
+  effect_columns_nonzero = FALSE,
+  N_std = 5,
+  N_dropNA = TRUE,
+  on_ref_genome = TRUE,
+  strand_ambig_filter = FALSE,
+  allele_flip_check = TRUE,
+  allele_flip_drop = TRUE,
+  allele_flip_z = TRUE,
+  allele_flip_frq = TRUE,
+  bi_allelic_filter = TRUE,
+  snp_ids_are_rs_ids = TRUE,
+  remove_multi_rs_snp = FALSE,
+  frq_is_maf = TRUE,
+  indels = TRUE,
+  dbSNP = 155,
+  check_dups = TRUE,
+  sort_coordinates = TRUE,
+  nThread = 1,
+  save_path = tempfile(fileext = ".tsv.gz"),
+  write_vcf = FALSE,
+  tabix_index = FALSE,
+  return_data = FALSE,
+  return_format = "data.table",
+  ldsc_format = FALSE,
+  save_format = NULL,
+  log_folder_ind = FALSE,
+  log_mungesumstats_msgs = FALSE,
+  log_folder = tempdir(),
+  imputation_ind = FALSE,
+  force_new = FALSE,
+  mapping_file = sumstatsColHeaders
+)
+```
+
+```{r}
+Sys.setenv(GITHUB_PAT = "")
+library(MAGMA.Celltyping)
+genesOutPath <- map_snps_to_genes(
+  path_formatted= path_formatted,
+  genome_build = "GRCh37",
+  upstream_kb = 35,
+  downstream_kb = 10,
+  N = 780324,
+  duplicate = c("drop", "first", "last", "error"),
+  synonym_dup = c("skip", "skip-dup", "drop", "drop-dup", "error"),
+  genome_ref_path = '/path/to/g1000_eur',
+  population = "eur",
+  genes_only = FALSE,
+  storage_dir = '/path/to/g1000_eur',
+  force_new = TRUE,
+  version = NULL,
+  verbose = TRUE
+)
+```
+
+
+```{r}
+library(MAGMA.Celltyping)
+#CTD = "/path/to/CTD.rda"
+#load(CTD)
+ctd = CTD
+ctd_name = "Neurons"
+magma_dirs = '/path/to/munged.txt.35UP.10DOWN/'
+save_dir = '/path/to/output_dir/'
+
+MAGMA_results <- celltype_associations_pipeline(
+  ctd,
+  ctd_levels = seq_len(length(ctd)),
+  ctd_name,
+  ctd_species = 'human',
+  standardise = TRUE,
+  magma_dirs,
+  run_linear = TRUE,
+  run_top10 = TRUE,
+  run_conditional = FALSE,
+  upstream_kb = 35,
+  downstream_kb = 10,
+  suffix_linear = "linear",
+  suffix_top10 = "top10",
+  suffix_condition = "condition",
+  controlledAnnotLevel = 1,
+  controlTopNcells = 1,
+  force_new = TRUE,
+  save_dir = tempdir(),
+  nThread = 1,
+  version = NULL,
+  verbose = TRUE
+)
+```
+Results merger
+```{r}
+merged_results <- merge_results(
+  MAGMA_results,
+  level = 2,
+  dataset_name = NULL,
+  species = "human",
+  filetype = "ctAssocMerged",
+  q_thresh = NULL,
+  method = "fdr",
+  save_dir = tempdir(),
+  verbose = TRUE
+)
+merged_results$Celltype <- gsub("_", " ", merged_results$Celltype)
+```
+
+```{r}
+barplot_ggplot <- results_barplot(
+  merged_results = merged_results,
+  title="MDD-ADHD-BPD Expression in Different Brain Tissues",
+  fdr_thresh = 1,
+  horz_line_p = .2
+)
+```
+
+```{r}
+topmerged_results <- merged_results[P<5e-8, ]
+
+barplot_ggplot <- results_barplot(
+  topmerged_results,
+  title = "MDD-ADHD-BPD Expression in Different Brain Tissues",
+  fdr_thresh = 1,
+  horz_line_p = .2
+)
+```
+
+```{r}
+heat <- results_heatmap(
+  merged_results = merged_results, 
+  title = "Alzheimer's Disease (ieu-a-298) vs.\nnervous system cell-types (Zeisel2015)",
+  fdr_thresh = 1)
+```
+
+
+```{r}
+library(ggplot2)
+
+# Define gene name
+gene <- "ENSG########"
+
+# Ensure `gene` exists in Raw_data before proceeding
+if (gene %in% rownames(Raw_data)) {
+  
+  # Create a dataframe linking expression data with cell types
+  cellExpDist <- data.frame(
+    Expression = as.numeric(Raw_data[gene, ]),  # Extract expression values for the gene
+    Brain_Region = annotLevels$l1  # Assign the cell type labels
+  )
+
+  # Generate a boxplot
+  ggplot(cellExpDist, aes(x = Brain_Region, y = Expression)) + 
+    geom_boxplot(outlier.alpha = 0.5) + 
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+} else {
+  message("Gene not found in Raw_data.")
+}
+```
+
+```{r}
+library(ggplot2)
+
+# Define gene name
+gene <- "ENSG########"
+
+# Ensure `gene` exists in Raw_data before proceeding
+if (gene %in% rownames(Raw_data)) {
+  
+  # Create a dataframe linking expression data with cell types
+  cellExpDist <- data.frame(
+    Expression = as.numeric(Raw_data[gene, ]),  # Extract expression values for the gene
+    Celltype = annotLevels$l2  # Assign the cell type labels
+  )
+
+  # Generate a boxplot
+  ggplot(cellExpDist, aes(x = Celltype, y = Expression)) + 
+    geom_boxplot(outlier.alpha = 0.5) + 
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+} else {
+  message("Gene not found in Raw_data.")
+}
+```
+
+
+
+
