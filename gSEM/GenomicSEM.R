@@ -29,4 +29,4 @@ F1 ~ SNP
 MDD~~a*MDD
 a > 0.001" #Model constraint to prevent MDD from having a negative residual variance
 GWASFINAL <- userGWAS(covstruc=covstruc, SNPs=SNPs, model=model, smooth_check=TRUE, fix_measurement=TRUE, Q_SNP=TRUE, modelchi = TRUE)
-fwrite(GWASFINAL, "/path/to/output_dir/mvgwas_raw.txt")
+fwrite(GWASFINAL, "/path/to/output_dir/mvgwas.txt")
