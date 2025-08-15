@@ -22,7 +22,7 @@ files <- list(
 )
 trait.names=c("ADHD", "BPD", "MDD")
 N=c(128213.795046, 220416.305497, 1309348.46886)
-binary=c(F, F, F)
+binary=c(T, T, T)
 gfactor_genes <- read_fusion(files=files, trait.names=trait.names, N=N, binary=binary)
 
 load("/path/to/gfactor_LDSC.RData")
